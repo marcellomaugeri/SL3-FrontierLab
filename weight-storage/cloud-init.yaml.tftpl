@@ -39,7 +39,7 @@ write_files:
       [Service]
       User=seaweedfs
       Group=seaweedfs
-      ExecStart=/usr/local/bin/weed server -dir=/srv/seaweedfs -ip=127.0.0.1 -s3 -volume.max=0
+      ExecStart=/usr/local/bin/weed server -dir=/srv/seaweedfs -ip=127.0.0.1 -s3 -volume.max=0 -master.volumeSizeLimitMB=1024
       Restart=on-failure
 
       [Install]
