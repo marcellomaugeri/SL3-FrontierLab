@@ -73,6 +73,11 @@ resource "proxmox_virtual_environment_firewall_options" "main" {
   node_name     = var.node_name
   output_policy = "ACCEPT"
   vm_id         = proxmox_virtual_environment_vm.main.vm_id
+
+  # Proxmox deletes a machine's firewall file together with the machine, so every new machine receives these options again.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_vm.main.id]
+  }
 }
 
 resource "proxmox_virtual_environment_firewall_rules" "main" {
