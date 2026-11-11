@@ -32,7 +32,6 @@ resource "proxmox_virtual_environment_vm" "main" {
     datastore_id = "local"
     interface    = "scsi1"
     iothread     = true
-    serial       = "data"
     size         = var.data_disk_size
   }
 

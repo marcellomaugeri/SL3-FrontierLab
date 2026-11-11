@@ -10,9 +10,9 @@ users:
 ssh_authorized_keys:
   - ${ssh_public_key}
 
-# The dedicated data disk carries the serial "data"; a partition table and overwrite: false keep its data when Cloud-Init runs again.
+# Proxmox names the dedicated data disk after its slot, scsi1; a partition table and overwrite: false keep its data when Cloud-Init runs again.
 device_aliases:
-  weights: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_data
+  weights: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
 disk_setup:
   weights:
     table_type: gpt
