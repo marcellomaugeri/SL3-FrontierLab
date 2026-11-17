@@ -1,0 +1,74 @@
+system-security-plan:
+  uuid: 5503aa90-83ae-454d-9c00-afc97dae3896
+  metadata:
+    title: SL3-FrontierLab system security plan
+    last-modified: "2026-11-17T12:32:06Z"
+    version: "1"
+    oscal-version: 1.2.3
+  import-profile:
+    href: sl3_profile.json
+  system-characteristics:
+    system-ids:
+    - identifier-type: http://datatracker.ietf.org/doc/html/rfc4122
+      id: e41736c9-c8d9-4316-9496-8ebfe2c522fc
+    system-name: SL3-FrontierLab
+    description: Infrastructure of a frontier AI provider on one Proxmox VE server, which implements a subset of RAND's Security Level 3 controls for model weights.
+    system-information:
+      information-types:
+      - uuid: c8ff465c-f978-4c5e-9561-c9cb8e86bb5e
+        title: Model weights
+        description: The weights of an AI model, whose confidentiality RAND's Security Level 3 controls protect.
+    status:
+      state: under-development
+    authorization-boundary:
+      description: The virtual machines and the virtual network that the repository's Terraform configuration creates on the Proxmox VE server.
+  system-implementation:
+    components:
+    - uuid: 3212d961-ceed-4d71-a42c-b043c4e481bd
+      type: service
+      title: Weight enclave
+      description: A virtual machine that runs SeaweedFS and keeps model weights on a virtual disk dedicated to them.
+      purpose: Provides object storage for model weights.
+      status:
+        state: operational
+      protocols:
+      - uuid: 3e37f268-72a0-46c7-963d-75fae219257d
+        name: s3
+        title: "SeaweedFS's Amazon Simple Storage Service (S3) interface, on the loopback address 127.0.0.1"
+        port-ranges:
+        - start: 8333
+          end: 8333
+          transport: TCP
+  control-implementation:
+    description: Each entry names a control of RAND's Security Level 3 profile, the components that implement it, the configuration that does so, and how far the control is implemented.
+    implemented-requirements:
+    - uuid: 7a43db40-6c3f-4cb9-ac5c-f7f2e063dd3d
+      control-id: sc-4
+      by-components:
+      - component-uuid: 3212d961-ceed-4d71-a42c-b043c4e481bd
+        uuid: 1b37f645-dda4-4d3e-b129-1bf5b4f1f069
+        description: |-
+          The Weight enclave implements two sentences of the control's statement.
+
+          "Assign model weight storage to dedicated volumes or filesystems logically or physically separated from general-purpose data."
+          The machine keeps its operating system on the system disk, in slot `scsi0`, and the weights on a second disk, the data disk in slot `scsi1`.
+          Cloud-Init gives the data disk one partition with an ext4 filesystem labelled `weights`, and mounts it at `/srv/seaweedfs`.
+          SeaweedFS runs with `-dir=/srv/seaweedfs`, so its volumes, the files that hold the stored weights, sit on the data disk.
+          The systemd unit starts SeaweedFS only while `/srv/seaweedfs` is a mount point.
+
+          "For frontier or high-sensitivity models, prefer dedicated infrastructure over shared compute where operationally feasible."
+          The weights live on a machine dedicated to them: Cloud-Init installs one application on it, SeaweedFS.
+          In the lab, Proxmox simulates this machine with a virtual machine.
+        implementation-status:
+          state: partial
+          remarks: The sentences on memory clearing and on isolation between tenants concern the inference and training machines, which later steps add.
+        links:
+        - href: ../modules/virtual-machine/main.tf
+          rel: reference
+          text: "Resource `proxmox_virtual_environment_vm.main`: the system disk `scsi0` and the data disk `scsi1`"
+        - href: ../weight-storage/cloud-init.yaml.tftpl
+          rel: reference
+          text: "Sections `device_aliases`, `disk_setup`, `fs_setup` and `mounts`: the data disk mounted at `/srv/seaweedfs`; `write_files`: the unit `seaweedfs.service`; `runcmd`: the installation of SeaweedFS"
+        - href: ../main.tf
+          rel: reference
+          text: "Module call `weight_storage`: the Weight enclave as a machine of its own"
